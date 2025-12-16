@@ -126,11 +126,11 @@ public class GameService {
             gameInProgressRepository.delete(gameInProgress);
         }
         gameInProgress.setPalabra(word);
-
-
+        int puntos = contarLetrasDescubiertas(palabrafinal);
         // Construir respuesta
 
         response= buildResponseFromGameInProgress(gameInProgress);
+        response.setPuntajeAcumulado(puntos);
         return response;
     }
     
@@ -151,7 +151,21 @@ public class GameService {
         
         return response;
     }
-    
+    private int contarLetrasDescubiertas(String palabraParcial) {
+        int puntos = 0;
+        for (char c : palabraParcial.toCharArray()) {
+            if (c != '_') {
+                puntos++;
+            }
+        }
+
+        if(!palabraParcial.contains("_")){
+            puntos=20;
+        }
+        return puntos;
+    }
+
+
     private Set<Character> stringToCharSet(String str) {
         Set<Character> set = new HashSet<>();
         if (str != null && !str.isEmpty()) {
