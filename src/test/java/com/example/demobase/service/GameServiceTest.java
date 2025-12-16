@@ -11,16 +11,14 @@ import com.example.demobase.repository.WordRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -55,8 +53,44 @@ class GameServiceTest {
 
     @Test
     void testStartGame_Success() {
-        // TODO: Implementar el test para testStartGame_Success
-        
+        // DO: Implementar el test para testStartGame_Success
+        Long playerId = 1L;
+
+        Player player = new Player();
+        player.setId(playerId);
+        player.setNombre("Pepe");
+
+        Word word = new Word();
+        word.setId(10L);
+        word.setPalabra("CASA");
+        word.setUtilizada(false);
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+
+        when(wordRepository.findRandomWord()).thenReturn(Optional.of(word));
+
+        when(gameInProgressRepository.findByJugadorIdOrderByFechaInicioDesc(playerId)).thenReturn(Collections.emptyList());
+        when(wordRepository.save(any(Word.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        when(gameInProgressRepository.save(any(GameInProgress.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        GameResponseDTO resp = gameService.startGame(playerId);
+        assertNotNull(resp);
+        ArgumentCaptor<Word> wordCaptor = ArgumentCaptor.forClass(Word.class);
+        verify(wordRepository).save(wordCaptor.capture());
+        assertTrue(wordCaptor.getValue().getUtilizada(), "La palabra debe quedar utilizada es deci debe quedar en true");
+        ArgumentCaptor<GameInProgress> gipCaptor = ArgumentCaptor.forClass(GameInProgress.class);
+        verify(gameInProgressRepository).save(gipCaptor.capture());
+
+        GameInProgress saved = gipCaptor.getValue();
+        assertEquals(playerId, saved.getJugador().getId());
+        assertEquals(word.getId(), saved.getPalabra().getId());
+        assertEquals(7, saved.getIntentosRestantes()); // o el valor que uses
+        assertEquals("", saved.getLetrasIntentadas());
+        assertNotNull(saved.getFechaInicio(), "fecha de Inicio no debe ser nulo");
+        verify(wordRepository).findRandomWord();
+        verify(gameInProgressRepository).findByJugadorIdOrderByFechaInicioDesc(playerId);
+        verifyNoMoreInteractions(wordRepository, gameInProgressRepository);
     }
 
     @Test

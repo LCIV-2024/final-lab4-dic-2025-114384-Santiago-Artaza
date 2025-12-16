@@ -11,12 +11,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -109,7 +111,39 @@ class ScoreboardServiceTest {
 
     @Test
     void testGetScoreboardByPlayer_Success() {
-        // TODO: Implementar el test para testGetScoreboardByPlayer_Success
+        // DO: Implementar el test para testGetScoreboardByPlayer_Success
+        Long playerId = 1L;
+
+        Player player = new Player();
+        player.setId(playerId);
+        player.setNombre("Juan");
+        Game g1 = new Game();
+        g1.setPuntaje(20);
+        g1.setResultado("GANADO");
+
+        Game g2 = new Game();
+        g2.setPuntaje(6);
+        g2.setResultado("PERDIDO");
+
+        Game g3 = new Game();
+        g3.setPuntaje(20);
+        g3.setResultado("GANADO");
+
+        when(playerRepository.findById(playerId)).thenReturn(Optional.of(player));
+        when(gameRepository.findByJugador(player)).thenReturn(List.of(g1, g2, g3));
+
+        ScoreboardDTO result = scoreboardService.getScoreboardByPlayer(playerId);
+        assertNotNull(result);
+        assertEquals(playerId, result.getIdJugador());
+        assertEquals("Juan", result.getNombreJugador());
+        assertEquals(46, result.getPuntajeTotal());
+        assertEquals(3L, result.getPartidasJugadas());
+        assertEquals(2L, result.getPartidasGanadas());
+        assertEquals(1L, result.getPartidasPerdidas());
+
+        verify(playerRepository, times(1)).findById(playerId);
+        verify(gameRepository, times(1)).findByJugador(player);
+        verifyNoMoreInteractions(playerRepository, gameRepository);
         
     }
 
